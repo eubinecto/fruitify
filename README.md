@@ -8,7 +8,7 @@ Given a description of a fruit, have an English BERT predict the fruits that bes
 
 
 ### Unaligned Cross-lingual Dictionary
-Given description of a fruit in Korean, Have an mBERT predict the fruits in English that best matches with the Korean description.
+Given a description of a fruit in Korean, Have an mBERT predict the fruits in English that best matches with the Korean description.
 - e.g.1: 동그랗고 빨간 과일 -> apple / strawberry / orange / grape / banana
 - e.g.2: 동그랗고 노란 과일 -> apple / strawberry / orange / grape / banana
 
