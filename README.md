@@ -16,4 +16,4 @@ Note that we attempt to do so with exactly the same training dataset as is used 
 
 
 ## Implementation
-We follow the architecture as used in *BERT for Monolingual and Cross-Lingual Reverse Dictionary*(Yan et al., 2020)
+We follow the same architecture as what is presented in *BERT for Monolingual and Cross-Lingual Reverse Dictionary*(Yan et al., 2020)
