@@ -1,4 +1,4 @@
-# fruitify
+# Fruitify
 
 ## objective
 ### Monolingual Dictionary
