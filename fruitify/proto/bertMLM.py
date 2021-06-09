@@ -41,7 +41,7 @@ def main():
         (tokenizer.decode([idx]), logit)
         for idx, logit in enumerate(logits_2.tolist())
     ]
-    print(sorted(pred_1, key=lambda x: x[1], reverse=True)[:20])  #  will "pun" appear in the top 20's?
+    print(sorted(pred_1, key=lambda x: x[1], reverse=True)[:20])  # will "pun" appear in the top 20's?
     print(sorted(pred_2, key=lambda x: x[1], reverse=True)[:20])  # will "bananas" appear in the top 20's?
 
 
