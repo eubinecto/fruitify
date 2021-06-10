@@ -1,7 +1,7 @@
 """
 The reverse dictionary models below are based off of: https://github.com/yhcc/BertForRD/blob/master/mono/model/bert.py
 """
-from typing import Tuple
+from typing import Tuple, List
 import pytorch_lightning as pl
 from torch import Tensor
 from torch.optim import Optimizer
@@ -17,7 +17,7 @@ class Frutifier(pl.LightningModule):
         # -- hyper params --- #
         self.k = k
 
-    def frutify(self, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+    def frutify(self, desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
         """
         Given a description, returns a list of fruits that best matches with the description.
         """
@@ -53,7 +53,7 @@ class MonoLingFruit(Frutifier):
         super().__init__(k)
         self.bert_mlm = bert_mlm  # this is the only layer we need, as far as MonoLing RD is concerned
 
-    def frutify(self, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+    def frutify(self, desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
         # TODO: Get use of fruitify.configs.CLASSES
         pass
 
@@ -90,7 +90,7 @@ class UnalignedCrossLingFruit(Frutifier):
         self.mbert = mbert  # we are using multi-lingual bert for this.
         # TODO: we need adding more layers here...
 
-    def frutify(self, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+    def frutify(self, desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
         # TODO: Get use of cls.FRUITS
         pass
 
