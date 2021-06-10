@@ -9,16 +9,19 @@ BATCH = [
 
 def main():
     # encode the batch into input_ids, token_type_ids and attention_mask
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    tokenizer = BertTokenizer.from_pretrained("mbert-base-uncased")
     encoded = tokenizer(BATCH,
-                        # return as pytorch tensors
+                        # return them as pytorch tensors
                         return_tensors="pt",
-                        # set this to True to have all sentences in an equal length
+                        # align the lengths by padding the short ones with [PAD] tokens.
                         padding=True)
     print(encoded['input_ids'])  # the id of each subword
     print(encoded['token_type_ids'])  # 0 = first sentence, 1 = second sentence (used for NSP)
     print(encoded['attention_mask'])  # 0 = do not compute attentions for (e.g. auto-regressive decoding)
     print(encoded['input_ids'].size())
+
+    # note: positional encodings are optional; if they are not given, a BertModel will automatically generate
+    # one.
 
 
 if __name__ == '__main__':

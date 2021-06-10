@@ -1,7 +1,7 @@
 """
 The reverse dictionary models below are based off of: https://github.com/yhcc/BertForRD/blob/master/mono/model/bert.py
 """
-from typing import Tuple, List
+from typing import Tuple
 import pytorch_lightning as pl
 from torch import Tensor
 from torch.optim import Optimizer
@@ -11,15 +11,15 @@ from torch.nn import functional as F
 
 class Frutifier(pl.LightningModule):
     # fruitify into these!
-    FRUITS: Tuple[str] = ('apple', 'banana', 'strawberry', 'orange', 'banana')
+    FRUITS: Tuple[str] = ('apple', 'banana', 'strawberry', 'orange', 'grape')
 
     def __init__(self, k: int):
         super().__init__()
         # -- hyper params --- #
         self.k = k
 
-    @staticmethod
-    def frutify(desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
+    @classmethod
+    def frutify(cls, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
         """
         Given a description, returns a list of fruits that best matches with the description.
         """
@@ -48,15 +48,16 @@ class Frutifier(pl.LightningModule):
 
 class MonoLingFruit(Frutifier):
     """
-    Eng-Eng monolingual frutifier.
+    Eng-Eng monolingual fruitifier.
     """
 
-    def __init__(self, bertMLM: BertForMaskedLM, k: int):
+    def __init__(self, bert_mlm: BertForMaskedLM, k: int):
         super().__init__(k)
-        self.bertMLM = bertMLM  # this is the only layer we need.
+        self.bert_mlm = bert_mlm  # this is the only layer we need, as far as MonoLing RD is concerned
 
-    @staticmethod
-    def frutify(desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
+    @classmethod
+    def frutify(cls, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+        # TODO: Get use of cls.FRUITS
         pass
 
     def forward(self, X: Tensor) -> Tensor:
@@ -64,37 +65,38 @@ class MonoLingFruit(Frutifier):
         :param X: (N, L) int tensor
         :return: (N, K, |S|); (num samples, k, the size of the vocabulary of subwords)
         """
-        # TODO: use bertMLM.bert(), bertMLM.cls()
+        # TODO: Get use of bert_mlm.mbert(), bert_mlm.cls(). Help: examples/bert_mlm.py
         pass
 
     def training_step(self, batch: Tensor, batch_idx: int) -> Tensor:
         """
-        :param batch: (N, L) int tensor
+        :param batch: ((N, L), (N, |S|)). The second element is a one-hot vector.
         :param batch_idx: the index of the batch
         :return: (1,); the loss for this batch
         """
-        # TODO: use F.cross_entropy()
-        pass
+        X, Y = batch
+        # TODO: use F.cross_entropy() to compute the loss, and return it. Help: examples/cross_entropy.py
 
 
-class CrossLingFruit(Frutifier):
+class UnalignedCrossLingFruit(Frutifier):
     """
-    Kor-Eng cross-lingual frutifier.
+    Kor-Eng unaligned cross-lingual fruitifier.
     """
-    def __init__(self, bert: BertModel,  k: int):
+    def __init__(self, mbert: BertModel, k: int):
         super().__init__(k)
         # may want to add language embedding here...
-        self.bert = bert
+        self.mbert = mbert  # we are using multi-lingual bert for this.
         # TODO: we need adding more layers here...
 
-    @staticmethod
-    def frutify(desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
+    @classmethod
+    def frutify(cls, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+        # TODO: Get use of cls.FRUITS
         pass
 
     def forward(self, X: Tensor) -> Tensor:
-        # TODO
+        # TODO: ...?
         pass
 
     def training_step(self, batch: Tensor, batch_idx: int) -> Tensor:
-        # TODO
-        pass
+        X, Y = batch
+        # TODO: use F.cross_entropy to compute the loss, and return it

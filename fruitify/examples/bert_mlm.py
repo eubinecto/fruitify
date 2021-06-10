@@ -2,7 +2,7 @@
 from transformers import BertForMaskedLM, BertTokenizer
 
 
-# you can just use special tokens in the sentences:
+# you can just embed the special tokens in sentences:
 BATCH = [
     "[CLS] I understand Tesla's vision. [SEP] Haha, that's a nice [MASK].",  # pun
     "[CLS] [MASK] are monkey's favorite fruit."  # bananas
@@ -11,12 +11,13 @@ BATCH = [
 
 def main():
     global BATCH
-    # the pre-trained model (may take a while to download them)
-    mlm = BertForMaskedLM.from_pretrained("bert-base-uncased")
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    # the pre-trained model and tokenizer (may take a while if they are have not been downloaded yet)
+    # the models will be saved to ~/.cache/transformers
+    mlm = BertForMaskedLM.from_pretrained("mbert-base-uncased")
+    tokenizer = BertTokenizer.from_pretrained("mbert-base-uncased")
     # encode the batch into input_ids, token_type_ids and attention_mask
     encoded = tokenizer(BATCH, return_tensors="pt", padding=True)
-    # mlm houses a pretrained bert model
+    # mlm houses a pretrained mbert model
     outputs = mlm.bert(**encoded)
     H = outputs[0]  # the hidden representation of the batch.
     print(H.size())  # (N=2, L) -> (N=2, L, Hidden=768)
@@ -28,11 +29,11 @@ def main():
     ]
     hidden_masked_1 = H[0, masked_ids[0], :]  # (N, L, 768) -> (1, 768)
     hidden_masked_2 = H[1, masked_ids[1], :]  # (N, L, 768) -> (1, 768)
-    # mlm also houses the masked language model (FFN + softmax). here, the outputs are logits.
-    logits_1 = mlm.cls(hidden_masked_1)  # (1, 768) -> (1, V)
-    logits_2 = mlm.cls(hidden_masked_2)  # (1, 768) -> (1, V)
+    # mlm also houses the masked language model (just another FFN layer). here, the outputs are logits.
+    logits_1 = mlm.cls(hidden_masked_1)  # (1, 768) * (768, |S|) -> (1, |S|)
+    logits_2 = mlm.cls(hidden_masked_2)  # (1, 768) * (768, |S|) -> (1, |S|)
     print(logits_1.size(), logits_1)
-    # predict the masks
+    # decode the predictions, the logits.
     pred_1 = [
         (tokenizer.decode([idx]), logit)
         for idx, logit in enumerate(logits_1.tolist())
@@ -41,6 +42,7 @@ def main():
         (tokenizer.decode([idx]), logit)
         for idx, logit in enumerate(logits_2.tolist())
     ]
+    # sort then in descending order.
     print(sorted(pred_1, key=lambda x: x[1], reverse=True)[:20])  # will "pun" appear in the top 20's?
     print(sorted(pred_2, key=lambda x: x[1], reverse=True)[:20])  # will "bananas" appear in the top 20's?
 
