@@ -69,7 +69,7 @@ class MonoLingFruit(Frutifier):
 
     def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         """
-        :param batch: A tuple of X and Y; ((N, 3, L), (N,)). The second element is a one-hot vector.
+        :param batch: A tuple of X and Y; ((N, 3, L), (N,)).
         :param batch_idx: the index of the batch
         :return: (1,); the loss for this batch
         """
