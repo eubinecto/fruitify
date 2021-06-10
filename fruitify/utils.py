@@ -11,7 +11,7 @@ def load_fruit2def() -> List[Tuple[str]]:
         fruit2def = list()
         for row in csv_reader:
             fruit2def += [
-                (row[0], definition)
+                (row[0].strip(), definition.strip())
                 for definition in row[1:9]
             ]
         return fruit2def

@@ -11,15 +11,12 @@ from torch.nn import functional as F
 
 class Frutifier(pl.LightningModule):
     # fruitify into these!
-    FRUITS: Tuple[str] = ('apple', 'banana', 'strawberry', 'orange', 'grape')
-
     def __init__(self, k: int):
         super().__init__()
         # -- hyper params --- #
         self.k = k
 
-    @classmethod
-    def frutify(cls, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+    def frutify(self, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
         """
         Given a description, returns a list of fruits that best matches with the description.
         """
@@ -55,22 +52,21 @@ class MonoLingFruit(Frutifier):
         super().__init__(k)
         self.bert_mlm = bert_mlm  # this is the only layer we need, as far as MonoLing RD is concerned
 
-    @classmethod
-    def frutify(cls, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
-        # TODO: Get use of cls.FRUITS
+    def frutify(self, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+        # TODO: Get use of self.classes
         pass
 
     def forward(self, X: Tensor) -> Tensor:
         """
-        :param X: (N, L) int tensor
+        :param X: (N, 3, L) (num samples, 0=input_ids/1=token_type_ids/2=attention_mask, the maximum length)
         :return: (N, K, |S|); (num samples, k, the size of the vocabulary of subwords)
         """
         # TODO: Get use of bert_mlm.mbert(), bert_mlm.cls(). Help: examples/bert_mlm.py
         pass
 
-    def training_step(self, batch: Tensor, batch_idx: int) -> Tensor:
+    def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         """
-        :param batch: ((N, L), (N, |S|)). The second element is a one-hot vector.
+        :param batch: A tuple of X and Y; ((N, 3, L), (N,)). The second element is a one-hot vector.
         :param batch_idx: the index of the batch
         :return: (1,); the loss for this batch
         """
@@ -88,8 +84,7 @@ class UnalignedCrossLingFruit(Frutifier):
         self.mbert = mbert  # we are using multi-lingual bert for this.
         # TODO: we need adding more layers here...
 
-    @classmethod
-    def frutify(cls, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
+    def frutify(self, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
         # TODO: Get use of cls.FRUITS
         pass
 

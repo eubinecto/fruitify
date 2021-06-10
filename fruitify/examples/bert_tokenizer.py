@@ -1,4 +1,5 @@
 from transformers import BertTokenizer
+from fruitify.configs import BERT_MODEL
 
 # you can just use special tokens in the sentences:
 BATCH = [
@@ -9,7 +10,7 @@ BATCH = [
 
 def main():
     # encode the batch into input_ids, token_type_ids and attention_mask
-    tokenizer = BertTokenizer.from_pretrained("mbert-base-uncased")
+    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
     encoded = tokenizer(BATCH,
                         # return them as pytorch tensors
                         return_tensors="pt",

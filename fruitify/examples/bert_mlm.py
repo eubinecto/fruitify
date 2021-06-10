@@ -1,6 +1,6 @@
 
 from transformers import BertForMaskedLM, BertTokenizer
-
+from fruitify.configs import BERT_MODEL
 
 # you can just embed the special tokens in sentences:
 BATCH = [
@@ -13,8 +13,8 @@ def main():
     global BATCH
     # the pre-trained model and tokenizer (may take a while if they are have not been downloaded yet)
     # the models will be saved to ~/.cache/transformers
-    mlm = BertForMaskedLM.from_pretrained("mbert-base-uncased")
-    tokenizer = BertTokenizer.from_pretrained("mbert-base-uncased")
+    mlm = BertForMaskedLM.from_pretrained(BERT_MODEL)
+    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
     # encode the batch into input_ids, token_type_ids and attention_mask
     encoded = tokenizer(BATCH, return_tensors="pt", padding=True)
     # mlm houses a pretrained mbert model

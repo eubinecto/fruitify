@@ -15,7 +15,8 @@ def main():
     # we set the logits like above so that +inf gets a near-1 probability
     print(F.softmax(logits, dim=1))
     classes = torch.Tensor([1, 2]).long()  # target should be typed as long
-
+    print("input shape:", logits.shape)
+    print("output shape:", classes.shape)
     # --- functional: cross entropy with built-in log softmax --- #
     loss = F.cross_entropy(logits, classes)
     print(loss)  # should be zero

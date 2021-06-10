@@ -1,13 +1,3 @@
 """
-test for the dimensions of the models - MonoLingFruit and UnalighedCrossLingFruit.
+test for dimensions
 """
-
-
-
-# MonoLingFruit
-
-
-
-
-
-# UnalignedCrossLingFruit
