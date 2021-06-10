@@ -4,8 +4,8 @@ from fruitify.configs import BERT_MODEL
 
 # you can just embed the special tokens in sentences:
 BATCH = [
-    "[CLS] I understand Tesla's vision. [SEP] Haha, that's a nice [MASK].",  # pun
-    "[CLS] [MASK] are monkey's favorite fruit."  # bananas
+    "I understand Tesla's vision. Haha, that's a nice [MASK].",  # pun
+    "[MASK] are monkey's favorite fruit."  # bananas
 ]
 
 
@@ -16,7 +16,11 @@ def main():
     mlm = BertForMaskedLM.from_pretrained(BERT_MODEL)
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
     # encode the batch into input_ids, token_type_ids and attention_mask
-    encoded = tokenizer(BATCH, return_tensors="pt", padding=True)
+    encoded = tokenizer(BATCH,
+                        add_special_tokens=True,
+                        return_tensors="pt",
+                        truncation=True,
+                        padding=True)
     # mlm houses a pretrained mbert model
     outputs = mlm.bert(**encoded)
     H = outputs[0]  # the hidden representation of the batch.

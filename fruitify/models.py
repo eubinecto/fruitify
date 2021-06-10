@@ -62,7 +62,9 @@ class MonoLingFruit(Frutifier):
         :return: (N, K, |S|); (num samples, k, the size of the vocabulary of subwords)
         """
         # TODO: Get use of bert_mlm.mbert(), bert_mlm.cls(). Help: examples/bert_mlm.py
-        pass
+        H_k = ...
+        S_subword = ...
+        return S_subword
 
     def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         """
@@ -70,8 +72,11 @@ class MonoLingFruit(Frutifier):
         :param batch_idx: the index of the batch
         :return: (1,); the loss for this batch
         """
-        X, Y = batch
         # TODO: use F.cross_entropy() to compute the loss, and return it. Help: examples/cross_entropy.py
+        X, y = batch
+        S_subword = self.forward(X)
+        loss = ...
+        return loss
 
 
 class UnalignedCrossLingFruit(Frutifier):
@@ -95,3 +100,7 @@ class UnalignedCrossLingFruit(Frutifier):
     def training_step(self, batch: Tensor, batch_idx: int) -> Tensor:
         X, Y = batch
         # TODO: use F.cross_entropy to compute the loss, and return it
+        S_subword = self.forward(X)
+        labels = batch['labels']
+        loss = ...
+        return loss

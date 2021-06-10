@@ -3,7 +3,7 @@ from fruitify.paths import FRUIT2DEFS_TSV
 import csv
 
 
-def load_fruit2def() -> List[Tuple[str]]:
+def load_fruit2def() -> List[Tuple[str, str]]:
     with open(FRUIT2DEFS_TSV, 'r') as fh:
         csv_reader = csv.reader(fh, delimiter="\t")
         # skip the header

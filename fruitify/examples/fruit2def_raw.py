@@ -1,4 +1,4 @@
-from fruitify.utils import load_fruit2def
+from fruitify.loaders import load_fruit2def
 
 
 def main():
