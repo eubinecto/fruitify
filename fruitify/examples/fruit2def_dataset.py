@@ -8,13 +8,14 @@ from fruitify.loaders import load_fruit2def
 def main():
     fruit2def = load_fruit2def()
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
-    dataset = Fruit2DefDataset(fruit2def, tokenizer, K)
+    dataset = Fruit2DefDataset(fruit2def, tokenizer, 5)
     print("--- a sample ---")
     for sample in dataset:
-        print(sample[0])
-        print(sample[0].shape)
-        print(sample[1])
-        print(sample[1].shape)
+        X, y = sample
+        print(X)
+        print(X.shape)  # (3, L)
+        print(y)  # just a scalar tensor
+        print(y.shape)
         break
 
     print("--- a batch ---")
@@ -22,7 +23,9 @@ def main():
                         shuffle=False)
     for batch in loader:
         X, y = batch
-        print(X.shape)
+        print(X)
+        print(X.shape)  # (N, 3, L)
+        print(y)  # (N,)
         print(y.shape)
         break
 

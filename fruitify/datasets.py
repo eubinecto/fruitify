@@ -6,15 +6,13 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
+from fruitify.configs import CLASSES
 
 
 class Fruit2DefDataset(Dataset):
     """
     This structure follows
     """
-    # these are the fruits
-    CLASSES = ['apple', 'banana', 'strawberry', 'orange', 'grape']
-
     # should I change this into ... encodings & labels?
     def __init__(self,
                  fruit2def: List[Tuple[str, str]],
@@ -23,7 +21,7 @@ class Fruit2DefDataset(Dataset):
         # (N, 3, L)
         self.X = self.build_encodings([def_ for _, def_ in fruit2def], tokenizer, k)
         # (N,)
-        self.y = self.build_labels([fruit for fruit, _ in fruit2def], self.CLASSES)
+        self.y = self.build_labels([fruit for fruit, _ in fruit2def], CLASSES)
 
     @staticmethod
     def build_encodings(defs: List[str], tokenizer: BertTokenizer, k: int) -> Tensor:

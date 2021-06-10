@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 from torch import Tensor
 from torch.optim import Optimizer
 from transformers import BertForMaskedLM, BertModel, BertTokenizer
+from fruitify.configs import CLASSES
 from torch.nn import functional as F
 
 
@@ -53,7 +54,7 @@ class MonoLingFruit(Frutifier):
         self.bert_mlm = bert_mlm  # this is the only layer we need, as far as MonoLing RD is concerned
 
     def frutify(self, desc: str, tokenizer: BertTokenizer) -> Tuple[Tuple[str, float]]:
-        # TODO: Get use of self.classes
+        # TODO: Get use of fruitify.configs.CLASSES
         pass
 
     def forward(self, X: Tensor) -> Tensor:
