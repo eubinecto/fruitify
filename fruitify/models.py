@@ -75,8 +75,9 @@ class MonoLingFruit(Frutifier):
         """
         # TODO: use F.cross_entropy() to compute the loss, and return it. Help: examples/cross_entropy.py
         X, y = batch
+        criterion = F.cross_entropy()
         S_subword = self.forward(X)
-        loss = ...
+        loss = criterion(S_subword, y)
         return loss
 
 
