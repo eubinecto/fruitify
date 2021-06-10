@@ -1,6 +1,12 @@
 # Fruitify
 
-## objective
+## Dependencies
+```bash
+pip3 install transformers
+pip3 install pytorch-lightning
+```
+
+## Objective
 ### Monolingual Reverse Dictionary
 Given a description of a fruit, have an English BERT predict the fruits that best match with the description (out of apple, banana, orange, grape and strawberry).
 - e.g.1: a red fruit of round shape -> apple / strawberry / orange / grape / banana

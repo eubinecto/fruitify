@@ -130,3 +130,5 @@ dmypy.json
 
 .idea
 
+# we are version controlling the saved models & logs
+./data/lightning_logs
