@@ -4,7 +4,7 @@ from fruitify.datasets import Fruit2DefDataset
 from fruitify.loaders import load_fruit2def
 from fruitify.configs import BERT_MODEL, MBERT_MODEL
 from fruitify.models import MonoLingFruit, UnalignedCrossLingFruit
-from fruitify.paths import SAVED_DIR
+from fruitify.paths import DATA_DIR
 import pytorch_lightning as pl
 import torch
 import argparse
@@ -43,7 +43,7 @@ def main():
     # --- instantiate the trainer --- #
     trainer = pl.Trainer(gpus=1 if torch.cuda.is_available() else None,
                          max_epochs=max_epochs,
-                         default_root_dir=SAVED_DIR)
+                         default_root_dir=DATA_DIR)
 
     # --- start training --- #
     trainer.fit(model=fruitifier,
