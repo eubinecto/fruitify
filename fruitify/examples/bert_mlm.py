@@ -1,5 +1,5 @@
 
-from transformers import BertForMaskedLM, BertTokenizer
+from transformers.models.bert import BertForMaskedLM, BertTokenizer
 from fruitify.configs import BERT_MODEL
 
 # you can just embed the special tokens in sentences:
@@ -15,13 +15,14 @@ def main():
     # the models will be saved to ~/.cache/transformers
     mlm = BertForMaskedLM.from_pretrained(BERT_MODEL)
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
+    print(mlm.config)
     # encode the batch into input_ids, token_type_ids and attention_mask
     encoded = tokenizer(BATCH,
                         add_special_tokens=True,
                         return_tensors="pt",
                         truncation=True,
                         padding=True)
-    # mlm houses a pretrained mbert model
+    # mlm houses a pretrained bert_ucl model
     outputs = mlm.bert(**encoded)
     H = outputs[0]  # the hidden representation of the batch.
     print(H.size())  # (N=2, L) -> (N=2, L, Hidden=768)
@@ -46,7 +47,7 @@ def main():
         (tokenizer.decode([idx]), logit)
         for idx, logit in enumerate(logits_2.tolist())
     ]
-    # sort then in descending order.
+    # sort them in descending order.
     print(sorted(pred_1, key=lambda x: x[1], reverse=True)[:20])  # will "pun" appear in the top 20's?
     print(sorted(pred_2, key=lambda x: x[1], reverse=True)[:20])  # will "bananas" appear in the top 20's?
 

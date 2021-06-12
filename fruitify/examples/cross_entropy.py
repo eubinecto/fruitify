@@ -32,7 +32,5 @@ def main():
     print(loss)  # should also be zero
 
 
-
-
 if __name__ == '__main__':
     main()

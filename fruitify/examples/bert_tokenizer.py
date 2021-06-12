@@ -26,7 +26,7 @@ def main():
     print(encoded['input_ids'])  # the id of each subword
     print(encoded['token_type_ids'])  # 0 = first sentence, 1 = second sentence (used for NSP)
     print(encoded['attention_mask'])  # 0 = do not compute attentions for (e.g. auto-regressive decoding)
-    # note: positional encodings are optional; if they are not given, a BertModel will automatically generate
+    # note: positional encodings are optional; if they are not given, BertModel will automatically generate
     # one.
     print("--- decoded ---")
     decoded = [

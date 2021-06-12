@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 from transformers import BertForMaskedLM, BertTokenizer, BertModel
-from fruitify.datasets import Fruit2DefDataset
+from fruitify.datasets import MonoFruit2DefDataset
 from fruitify.loaders import load_fruit2def
 from fruitify.configs import BERT_MODEL, MBERT_MODEL
 from fruitify.models import MonoLingFruit, UnalignedCrossLingFruit
@@ -37,7 +37,7 @@ def main():
         raise ValueError
     # --- load the data --- #
     fruit2def = load_fruit2def()
-    dataset = Fruit2DefDataset(fruit2def, tokenizer, k)  # just use everything for training
+    dataset = MonoFruit2DefDataset(fruit2def, tokenizer, k)  # just use everything for training
     dataloader = DataLoader(dataset, batch_size=10,
                             shuffle=False, num_workers=1)
     # --- instantiate the trainer --- #
