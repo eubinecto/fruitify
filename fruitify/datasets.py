@@ -5,28 +5,11 @@ from typing import List, Tuple
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
-from torch.utils.data.dataset import T_co
 from transformers import BertTokenizer
-from fruitify.configs import CLASSES
+from fruitify.vocab import VOCAB
 
 
 class Fruit2DefDataset(Dataset):
-    @staticmethod
-    def build_X(**args):
-        raise NotImplementedError
-
-    @staticmethod
-    def build_y(**args):
-        raise NotImplementedError
-
-    def __len__(self):
-        raise NotImplementedError
-
-    def __getitem__(self, index) -> T_co:
-        raise NotImplementedError
-
-
-class MonoFruit2DefDataset(Fruit2DefDataset):
     """
     This structure follows
     """
@@ -38,7 +21,9 @@ class MonoFruit2DefDataset(Fruit2DefDataset):
         # (N, 3, L)
         self.X = self.build_X([def_ for _, def_ in fruit2def], tokenizer, k)
         # (N,)
-        self.y = self.build_y([fruit for fruit, _ in fruit2def], CLASSES)
+        fruits = [fruit for fruit, _ in fruit2def]
+        self.y = self.build_y(fruits, VOCAB)
+        # (N, K)
 
     @staticmethod
     def build_X(defs: List[str], tokenizer: BertTokenizer, k: int) -> Tensor:
@@ -46,8 +31,8 @@ class MonoFruit2DefDataset(Fruit2DefDataset):
         rights = defs
         encodings = tokenizer(text=lefts,
                               text_pair=rights,
-                              add_special_tokens=True,
                               return_tensors="pt",
+                              add_special_tokens=True,
                               truncation=True,
                               padding=True)
 
@@ -80,25 +65,3 @@ class MonoFruit2DefDataset(Fruit2DefDataset):
         """
         return self.X[idx], self.y[idx]
 
-
-class UnalignedCrossFruit2DefDataset(Fruit2DefDataset):
-    """
-    to be used for training an UnalignedCrossFruit model.
-    """
-
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def build_X(**args):
-        pass
-
-    @staticmethod
-    def build_y(**args):
-        pass
-
-    def __len__(self):
-        pass
-
-    def __getitem__(self, item):
-        pass

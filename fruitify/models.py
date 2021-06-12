@@ -1,7 +1,9 @@
 """
 The reverse dictionary models below are based off of: https://github.com/yhcc/BertForRD/blob/master/mono/model/bert.py
 """
-from typing import Tuple, List, Optional
+import os
+from argparse import Namespace
+from typing import Tuple, List, Optional, Union
 import pytorch_lightning as pl
 import torch
 import numpy as np
@@ -11,21 +13,22 @@ from transformers import BertTokenizer
 from transformers.models.bert.modeling_bert import BertModel, BertForMaskedLM, BertEmbeddings
 from transformers.models.bert.configuration_bert import BertConfig
 from torch.nn import functional as F
-from fruitify.configs import CLASSES
+from fruitify.datasets import Fruit2DefDataset
 
 
-class Frutifier(pl.LightningModule):
+class RD(pl.LightningModule):
+    """
+    A reverse-dictionary.
+    """
     # fruitify into these!
-    def __init__(self, k: int):
+    def __init__(self, word2subs: Tensor, k: int, lr: float):
         super().__init__()
+        # -- to be used to compute S_word -- #
+        self.word2subs = word2subs
         # -- hyper params --- #
-        self.k = k
-
-    def frutify(self, desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
-        """
-        Given a description, returns a list of fruits that best matches with the description.
-        """
-        raise NotImplementedError
+        # should be saved to self.hparams
+        # https://github.com/PyTorchLightning/pytorch-lightning/issues/4390#issue-730493746
+        self.save_hyperparameters(Namespace(k=k, lr=lr))
 
     def forward(self, X: Tensor) -> Tensor:
         """
@@ -33,60 +36,61 @@ class Frutifier(pl.LightningModule):
         """
         raise NotImplementedError
 
-    def training_step(self, batch: Tensor, batch_idx: int) -> Tensor:
+    def S_word(self, S_subword: Tensor) -> Tensor:
+        word2subs = self.word2subs.T.repeat(S_subword.shape[0], 1, 1)  # (|V|, K) -> (N, K, |V|)
+        S_word = S_subword.gather(dim=-1, index=word2subs)  # (N, K, |S|) -> (N, K, |V|)
+        S_word = S_word.sum(dim=1)  # (N, K, |V|) -> (N, |V|)
+        return S_word
+
+    def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         """
-        Computes the loss with respect to the bach and returns the loss.
+        :param batch: A tuple of X, y, subword_ids; ((N, 4, L), (N,),
+        :param batch_idx: the index of the batch
+        :return: (1,); the loss for this batch
         """
-        raise NotImplementedError
+        X, y = batch
+        S_subword = self.forward(X)  # (N, 4, L) -> (N, K, |S|)
+        S_word = self.S_word(S_subword)  # (N, K, |S|) -> (N, |V|)
+        loss = F.cross_entropy(S_word, y)  # (N, |V|) -> (N,)
+        loss = loss.sum()  # (N,) -> scalar
+        self.log('train_loss', loss.item())  # monitor this, while training.
+        return loss
 
     def configure_optimizers(self) -> Optimizer:
         """
         Instantiates and returns the optimizer to be used for this model
         e.g. torch.optim.Adam
         """
-        # TODO: what optimizer did the authors used?
-        pass
+        # The authors used Adam, so we might as well use it
+        return torch.optim.AdamW(self.parameters(), lr=self.hparams['lr'])
 
 
-class MonoLingFruit(Frutifier):
+class MonoLingRD(RD):
     """
     Eng-Eng monolingual fruitifier.
     """
 
-    def __init__(self, bert_mlm: BertForMaskedLM, k: int):
-        super().__init__(k)
+    def __init__(self, bert_mlm: BertForMaskedLM, word2subs: Tensor, k: int, lr: float):
+        super().__init__(word2subs, k, lr)
         self.bert_mlm = bert_mlm  # this is the only layer we need, as far as MonoLing RD is concerned
-
-    def frutify(self, desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
-        # TODO: Get use of fruitify.configs.CLASSES
-        pass
 
     def forward(self, X: Tensor) -> Tensor:
         """
-        :param X: (N, 3, L) (num samples, 0=input_ids/1=token_type_ids/2=attention_mask, the maximum length)
-        :return: (N, K, |S|); (num samples, k, the size of the vocabulary of subwords)
+        :param X: (N, 4, L) (num samples, 0=input_ids/1=token_type_ids/2=attention_mask, the maximum length)
+        :return: (N, |V|); (num samples, k, the size of the vocabulary of subwords)
         """
-        # TODO: Get use of bert_mlm.bert(), bert_mlm.cls(). Help: examples/bert_mlm.py
-        H_k = ...
-        S_subword = ...
+        input_ids = X[:, 0]
+        token_type_ids = X[:, 1]
+        attention_mask = X[:, 2]
+        H_all = self.bert_mlm.bert.forward(input_ids, attention_mask, token_type_ids)[0]  # (N, 4, L) -> (N, L, 768)
+        H_k = H_all[:, 1: self.hparams['k'] + 1]  # (N, L, 768) -> (N, K, 768)
+        S_subword = self.bert_mlm.cls(H_k)  # (N, K, 768) ->  (N, K, |S|)
         return S_subword
 
-    def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
-        """
-        :param batch: A tuple of X and Y; ((N, 3, L), (N,)).
-        :param batch_idx: the index of the batch
-        :return: (1,); the loss for this batch
-        """
-        X, y = batch
-        S_subword = self.forward(X)
-        loss_ = F.cross_entropy(S_subword, y)
-        loss = loss_.sum()
-        return loss
 
-
-class UnalignedCrossLingBertEmbeddings(BertEmbeddings):
+class UnalignedCrossLingRDBertEmbeddings(BertEmbeddings):
     def __init__(self, num_langs: int,  config: BertConfig):
-        super(UnalignedCrossLingBertEmbeddings, self).__init__(config)
+        super(UnalignedCrossLingRDBertEmbeddings, self).__init__(config)
         self.num_Langs = num_langs
         self.config = config
         self.lang_ids: Optional[Tensor] = None  # to be updated
@@ -100,7 +104,7 @@ class UnalignedCrossLingBertEmbeddings(BertEmbeddings):
                                b=np.sqrt(3 / self.language_embedding.weight.data.shape[1]))
 
     def forward(self, *args) -> Tensor:
-        out = super(UnalignedCrossLingBertEmbeddings, self).forward(*args)
+        out = super(UnalignedCrossLingRDBertEmbeddings, self).forward(*args)
         # just add the embeddings at the end.
         return out + self.language_embedding(self.lang_ids)
 
@@ -114,15 +118,22 @@ class UnalignedCrossLingBertEmbeddings(BertEmbeddings):
 
 
 # yeah, it would be better to subclass BERT here.
-class UnalignedCrossLingBertModel(BertModel):
+class UnalignedCrossLingRDBertModel(BertModel):
 
     def __init__(self, config: BertConfig, num_langs: int):
         super().__init__(config)
-        self.embeddings = UnalignedCrossLingBertEmbeddings(num_langs, config)
+
+    @classmethod
+    def from_pretrained(cls, pretrained_model_name_or_path: Optional[Union[str, os.PathLike]], num_langs: int = None,
+                        *model_args, **kwargs):
+        model = super(UnalignedCrossLingRDBertModel, cls).from_pretrained(pretrained_model_name_or_path,
+                                                                          *model_args, **kwargs)
+        # override the embeddings with...hmmmmmm.....
+        model.embeddings = UnalignedCrossLingRDBertEmbeddings(num_langs, model.config)
 
     def forward(self,
                 # this one is added
-                lang_ids: Tensor = None,
+                lang_ids: Tensor = None,  # the language mask.
                 input_ids=None,
                 attention_mask=None,
                 token_type_ids=None,
@@ -137,33 +148,30 @@ class UnalignedCrossLingBertModel(BertModel):
                 output_hidden_states=None,
                 return_dict=None,):
         # first, register language ids, then call forward.
+        assert not self.embeddings.lang_ids  # should have been deleted
         self.embeddings.update_lang_ids(lang_ids)
-        H_all = super(UnalignedCrossLingBertModel, self).forward(input_ids, attention_mask,
-                                                                 token_type_ids, position_ids,
-                                                                 head_mask, inputs_embeds, encoder_hidden_states,
-                                                                 encoder_attention_mask, past_key_values,
-                                                                 use_cache, output_attentions, output_hidden_states,
-                                                                 return_dict)
+        H_all = super(UnalignedCrossLingRDBertModel, self).forward(input_ids, attention_mask,
+                                                                   token_type_ids, position_ids,
+                                                                   head_mask, inputs_embeds, encoder_hidden_states,
+                                                                   encoder_attention_mask, past_key_values,
+                                                                   use_cache, output_attentions, output_hidden_states,
+                                                                   return_dict)
         self.embeddings.del_lang_ids()  # delete it after use
         return H_all
 
     def _reorder_cache(self, past, beam_idx):
-        super(UnalignedCrossLingBertModel, self)._reorder_cache(past, beam_idx)
+        super(UnalignedCrossLingRDBertModel, self)._reorder_cache(past, beam_idx)
 
 
-class UnalignedCrossLingFruit(Frutifier):
+class UnalignedCrossLingRD(RD):
     """
     Kor-Eng unaligned cross-lingual fruitifier.
     """
-    def __init__(self, bert_ucl: UnalignedCrossLingBertModel, k: int):
+    def __init__(self, bert_ucl: UnalignedCrossLingRDBertModel, word2subs: Tensor,  k: int, lr: float):
         if isinstance(bert_ucl.config, BertConfig):
-            super().__init__(k)
+            super().__init__(word2subs, k, lr)
             # may want to add language embedding here...
             self.bert_ucl = bert_ucl  # we are using multi-lingual bert for this.
-
-    def frutify(self, desc: str, tokenizer: BertTokenizer) -> List[Tuple[str, float]]:
-        # TODO: Get use of cls.FRUITS
-        pass
 
     def forward(self, X: Tensor) -> Tensor:
         """
@@ -174,16 +182,33 @@ class UnalignedCrossLingFruit(Frutifier):
         token_type_ids = X[:, 1]
         attention_mask = X[:, 2]
         lang_ids = X[:, 3]
-        H_all = self.bert_ucl.forward(lang_ids, input_ids, attention_mask, token_type_ids)
-        H_k = H_all[1:self.k + 1]  # (N, K, 768)
+        H_all = self.bert_ucl.forward(lang_ids, input_ids, attention_mask, token_type_ids)[0]
+        H_k = H_all[:, 1:self.hparams['k'] + 1]  # (N, K, 768)
         Emb_token = self.bert_ucl.embeddings.word_embeddings.weight.data  # (N, |S|, 768)
         S_subword = torch.einsum('nkh,nsh->nks', H_k, Emb_token)  # ( N, K, 768) * (N, |S|, 768) -> (N, K, |S|)
         return S_subword
 
-    def training_step(self, batch: Tensor, batch_idx: int) -> Tensor:
-        X, y_1, y_2 = batch  # the encodings, labels_fruit, labels_lang
-        # TODO: use F.cross_entropy to compute the loss, and return it
-        # you should group them by y_2.
-        S_subword = self.forward(X)
-        loss = ...
-        return loss
+
+class Fruitifier:
+
+    def __init__(self, rd: RD, tokenizer: BertTokenizer, fruits: List[str]):
+        self.rd = rd  # a trained reverse dictionary
+        self.tokenizer = tokenizer
+        self.fruits = fruits  # the classes
+
+    def fruitify(self, descriptions: List[str]) -> List[List[Tuple[str, float]]]:
+        # get the X
+        X = Fruit2DefDataset.build_X(defs=descriptions, tokenizer=self.tokenizer, k=self.rd.hparams['k'])
+        # get S_subword for this.
+        S_subword = self.rd.forward(X)
+        S_word = self.rd.S_word(S_subword)  # (N, |V|).
+        results = list()
+        for w_scores in S_word.tolist():
+            fruit2score = [
+                (fruit, w_score)
+                for fruit, w_score in zip(self.fruits, w_scores)
+            ]
+            # sort and append
+            results.append(sorted(fruit2score, key=lambda x: x[1], reverse=True))
+        return results
+

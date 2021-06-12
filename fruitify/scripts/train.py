@@ -1,13 +1,15 @@
+from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
-from transformers import BertForMaskedLM, BertTokenizer, BertModel
-from fruitify.datasets import MonoFruit2DefDataset
+from transformers import BertForMaskedLM, BertTokenizer
+from fruitify.datasets import Fruit2DefDataset
 from fruitify.loaders import load_fruit2def
 from fruitify.configs import BERT_MODEL, MBERT_MODEL
-from fruitify.models import MonoLingFruit, UnalignedCrossLingFruit
+from fruitify.models import MonoLingRD, UnalignedCrossLingRD, UnalignedCrossLingRDBertModel
 from fruitify.paths import DATA_DIR
 import pytorch_lightning as pl
 import torch
 import argparse
+from fruitify.vocab import build_word2subs
 
 
 def main():
@@ -16,33 +18,49 @@ def main():
     parser.add_argument("--fruit_type", type=str,
                         default="mono")
     parser.add_argument("--k", type=int,
-                        default=5)
+                        default=3)
+    parser.add_argument("--lr", type=float,
+                        default=0.001)
     parser.add_argument("--max_epochs", type=int,
-                        default=20)
+                        default=13)
     args = parser.parse_args()
     fruit_type: str = args.fruit_type
     k: int = args.k
+    lr: float = args.lr
     max_epochs: int = args.max_epochs
 
     # --- instantiate the models --- #
     if fruit_type == "mono":
         bert_mlm = BertForMaskedLM.from_pretrained(BERT_MODEL)
         tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
-        fruitifier = MonoLingFruit(bert_mlm, k)
+        word2subs = build_word2subs(tokenizer, k)
+        fruitifier = MonoLingRD(bert_mlm, word2subs, k, lr)
+        model_name = "mono_{epoch:02d}_{train_loss:.2f}"
     elif fruit_type == "cross":
-        mbert = BertModel(MBERT_MODEL)
+        # based off of pre-trained multilingual bert
+        bert_ucl = UnalignedCrossLingRDBertModel.from_pretrained(MBERT_MODEL)
         tokenizer = BertTokenizer.from_pretrained(MBERT_MODEL)
-        fruitifier = UnalignedCrossLingFruit(mbert, k)
+        word2subs = build_word2subs(tokenizer, k)
+        fruitifier = UnalignedCrossLingRD(bert_ucl, word2subs, k, lr)
+        model_name = "cross_{epoch:02d}_{train_loss:.2f}"
     else:
         raise ValueError
     # --- load the data --- #
     fruit2def = load_fruit2def()
-    dataset = MonoFruit2DefDataset(fruit2def, tokenizer, k)  # just use everything for training
+    dataset = Fruit2DefDataset(fruit2def, tokenizer, k)  # just use everything for training
     dataloader = DataLoader(dataset, batch_size=10,
-                            shuffle=False, num_workers=1)
+                            shuffle=False, num_workers=4)
+
+    # --- init callbacks --- #
+    checkpoint_callback = ModelCheckpoint(
+        monitor='train_loss',
+        filename=model_name
+    )
+
     # --- instantiate the trainer --- #
     trainer = pl.Trainer(gpus=1 if torch.cuda.is_available() else None,
                          max_epochs=max_epochs,
+                         callbacks=[checkpoint_callback],
                          default_root_dir=DATA_DIR)
 
     # --- start training --- #
