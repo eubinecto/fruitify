@@ -15,7 +15,7 @@ def main():
     parser.add_argument("--fruit_type", type=str,
                         default="mono")
     parser.add_argument("--desc", type=str,
-                        default="A fruit with an elongated shape")
+                        default="The fruit that monkeys love")
     args = parser.parse_args()
     fruit_type: str = args.fruit_type
     desc: str = args.desc
