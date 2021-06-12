@@ -1,5 +1,5 @@
 """
-load a pre-trained fruitify, and play with it.
+What does bert.embeddings() do?
 """
 
 

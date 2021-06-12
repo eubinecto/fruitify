@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
-from fruitify.configs import CLASSES
+from fruitify.vocab import VOCAB
 
 
 class Fruit2DefDataset(Dataset):
@@ -19,18 +19,20 @@ class Fruit2DefDataset(Dataset):
                  tokenizer: BertTokenizer,
                  k: int):
         # (N, 3, L)
-        self.X = self.build_encodings([def_ for _, def_ in fruit2def], tokenizer, k)
+        self.X = self.build_X([def_ for _, def_ in fruit2def], tokenizer, k)
         # (N,)
-        self.y = self.build_labels([fruit for fruit, _ in fruit2def], CLASSES)
+        fruits = [fruit for fruit, _ in fruit2def]
+        self.y = self.build_y(fruits, VOCAB)
+        # (N, K)
 
     @staticmethod
-    def build_encodings(defs: List[str], tokenizer: BertTokenizer, k: int) -> Tensor:
+    def build_X(defs: List[str], tokenizer: BertTokenizer, k: int) -> Tensor:
         lefts = [" ".join(["[MASK]"] * k)] * len(defs)
         rights = defs
         encodings = tokenizer(text=lefts,
                               text_pair=rights,
-                              add_special_tokens=True,
                               return_tensors="pt",
+                              add_special_tokens=True,
                               truncation=True,
                               padding=True)
 
@@ -42,7 +44,7 @@ class Fruit2DefDataset(Dataset):
                             encodings['attention_mask']], dim=1)
 
     @staticmethod
-    def build_labels(fruits: List[str], classes: List[str]) -> Tensor:
+    def build_y(fruits: List[str], classes: List[str]) -> Tensor:
         return Tensor([
             classes.index(fruit)
             for fruit in fruits
@@ -62,3 +64,4 @@ class Fruit2DefDataset(Dataset):
         :return:
         """
         return self.X[idx], self.y[idx]
+
