@@ -37,6 +37,12 @@ class RD(pl.LightningModule):
         raise NotImplementedError
 
     def S_word(self, S_subword: Tensor) -> Tensor:
+        # pineapple -> pine, ###apple, mask, mask, mask, mask, mask
+        # [ ...,
+        #   ...,
+        #   ...
+        #   [98, 122, 103, 103]]
+        # [
         word2subs = self.word2subs.T.repeat(S_subword.shape[0], 1, 1)  # (|V|, K) -> (N, K, |V|)
         S_word = S_subword.gather(dim=-1, index=word2subs)  # (N, K, |S|) -> (N, K, |V|)
         S_word = S_word.sum(dim=1)  # (N, K, |V|) -> (N, |V|)
@@ -44,12 +50,12 @@ class RD(pl.LightningModule):
 
     def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         """
-        :param batch: A tuple of X, y, subword_ids; ((N, 4, L), (N,),
+        :param batch: A tuple of X, y, subword_ids; ((N, 3, L), (N,),
         :param batch_idx: the index of the batch
         :return: (1,); the loss for this batch
         """
         X, y = batch
-        S_subword = self.forward(X)  # (N, 4, L) -> (N, K, |S|)
+        S_subword = self.forward(X)  # (N, 3, L) -> (N, K, |S|)
         S_word = self.S_word(S_subword)  # (N, K, |S|) -> (N, |V|)
         loss = F.cross_entropy(S_word, y)  # (N, |V|) -> (N,)
         loss = loss.sum()  # (N,) -> scalar
@@ -76,7 +82,7 @@ class MonoLingRD(RD):
 
     def forward(self, X: Tensor) -> Tensor:
         """
-        :param X: (N, 4, L) (num samples, 0=input_ids/1=token_type_ids/2=attention_mask, the maximum length)
+        :param X: (N, 3, L) (num samples, 0=input_ids/1=token_type_ids/2=attention_mask, the maximum length)
         :return: (N, |V|); (num samples, k, the size of the vocabulary of subwords)
         """
         input_ids = X[:, 0]

@@ -12,9 +12,10 @@ def main():
     X_1 = Tensor(np.ones(shape=(N, K, H)))  # N, K, H
     X_2 = Tensor(np.ones(shape=(N, S, H)))  # N, S, H
 
-    # How do I get  (N, K, S)? use einsum
+    # How do I get  (N, K, S)? use einsum; particularly useful for dot product of 3d matrices.
     # https://discuss.pytorch.org/t/3d-matrix-of-dot-products/89198
     Y = torch.einsum('nkh,nsh->nks', X_1, X_2)  # (N, K, H) * (N, S, H) -> (N, K, S)
+    # N은 고정, (K, H) * (H, S) dot product.
     print(Y.shape)
     # einsum is awesome!
 

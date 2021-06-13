@@ -34,14 +34,14 @@ def main():
         bert_mlm = BertForMaskedLM.from_pretrained(BERT_MODEL)
         tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
         word2subs = build_word2subs(tokenizer, k)
-        fruitifier = MonoLingRD(bert_mlm, word2subs, k, lr)
+        rd = MonoLingRD(bert_mlm, word2subs, k, lr)
         model_name = "mono_{epoch:02d}_{train_loss:.2f}"
     elif fruit_type == "cross":
         # based off of pre-trained multilingual bert
         bert_ucl = UnalignedCrossLingRDBertModel.from_pretrained(MBERT_MODEL)
         tokenizer = BertTokenizer.from_pretrained(MBERT_MODEL)
         word2subs = build_word2subs(tokenizer, k)
-        fruitifier = UnalignedCrossLingRD(bert_ucl, word2subs, k, lr)
+        rd = UnalignedCrossLingRD(bert_ucl, word2subs, k, lr)
         model_name = "cross_{epoch:02d}_{train_loss:.2f}"
     else:
         raise ValueError
@@ -64,7 +64,7 @@ def main():
                          default_root_dir=DATA_DIR)
 
     # --- start training --- #
-    trainer.fit(model=fruitifier,
+    trainer.fit(model=rd,
                 train_dataloader=dataloader)
 
 

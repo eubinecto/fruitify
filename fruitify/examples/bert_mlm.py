@@ -4,7 +4,7 @@ from fruitify.configs import BERT_MODEL
 
 # you can just embed the special tokens in sentences:
 BATCH = [
-    "I understand Tesla's vision. Haha, that's a nice [MASK].",  # pun
+    "I understand Tesla's vision. Haha, that's a nice [MASK]",  # pun
     "[MASK] are monkey's favorite fruit."  # bananas
 ]
 

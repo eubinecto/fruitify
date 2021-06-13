@@ -15,7 +15,7 @@ def main():
     parser.add_argument("--fruit_type", type=str,
                         default="mono")
     parser.add_argument("--desc", type=str,
-                        default="The fruit that monkeys love")
+                        default="A red fruit.")
     args = parser.parse_args()
     fruit_type: str = args.fruit_type
     desc: str = args.desc
@@ -26,6 +26,7 @@ def main():
         tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
         word2subs = build_word2subs(tokenizer, k=3)  # this is something I don't really like...
         rd = MonoLingRD.load_from_checkpoint(MONO_CKPT, bert_mlm=bert_mlm, word2subs=word2subs)
+        rd.eval()  # this is necessary
     elif fruit_type == "cross":
         raise NotImplementedError
     else:

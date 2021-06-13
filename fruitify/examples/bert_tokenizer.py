@@ -1,5 +1,6 @@
 from transformers import BertTokenizer, AddedToken
-from fruitify.configs import BERT_MODEL, VOCAB
+from fruitify.configs import BERT_MODEL
+from fruitify.vocab import VOCAB
 
 # you can just use special tokens in the sentences:
 BATCH = [
