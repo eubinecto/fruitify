@@ -1,7 +1,7 @@
 """
 What does bert.embeddings() do?
 """
-
+from transformers.models.bert import BertModel
 
 def main():
     pass

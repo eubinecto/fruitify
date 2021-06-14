@@ -22,12 +22,15 @@ def main():
     parser.add_argument("--lr", type=float,
                         default=0.001)
     parser.add_argument("--max_epochs", type=int,
-                        default=13)
+                        default=20)
+    parser.add_argument("--batch_size", type=str,
+                        default=40)
     args = parser.parse_args()
     fruit_type: str = args.fruit_type
     k: int = args.k
     lr: float = args.lr
     max_epochs: int = args.max_epochs
+    batch_size: int = args.batch_size
 
     # --- instantiate the models --- #
     if fruit_type == "mono":
@@ -48,8 +51,9 @@ def main():
     # --- load the data --- #
     fruit2def = load_fruit2def()
     dataset = Fruit2DefDataset(fruit2def, tokenizer, k)  # just use everything for training
-    dataloader = DataLoader(dataset, batch_size=10,
-                            shuffle=False, num_workers=4)
+    dataloader = DataLoader(dataset, batch_size=batch_size,
+                            shuffle=True,  # this should be set to True maybe?
+                            num_workers=4)
 
     # --- init callbacks --- #
     checkpoint_callback = ModelCheckpoint(

@@ -15,6 +15,6 @@ FRUIT2DEFS_TSV = path.join(DATA_DIR, "fruit2def.tsv")
 
 
 # the models
-MONO_CKPT = path.join(DATA_DIR, "lightning_logs/version_0/checkpoints/mono_epoch=04_train_loss=1.46.ckpt")
+MONO_CKPT = path.join(DATA_DIR, "lightning_logs/version_0/checkpoints/mono_epoch=17_train_loss=1.60.ckpt")
 
 
