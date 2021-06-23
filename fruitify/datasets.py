@@ -23,7 +23,6 @@ class Fruit2DefDataset(Dataset):
         # (N,)
         fruits = [fruit for fruit, _ in fruit2def]
         self.y = self.build_y(fruits, VOCAB)
-        # (N, K)
 
     @staticmethod
     def build_X(defs: List[str], tokenizer: BertTokenizer, k: int) -> Tensor:
@@ -49,6 +48,15 @@ class Fruit2DefDataset(Dataset):
             classes.index(fruit)
             for fruit in fruits
         ]).long()
+
+    def upsample(self, repeat: int):
+        """
+        this is to try upsampling the batch by simply repeating the instances.
+        https://github.com/eubinecto/fruitify/issues/7#issuecomment-860603350
+        :return:
+        """
+        self.X = self.X.repeat(repeat, 1, 1)  # (N, 3, L) -> (N * repeat, 3, L)
+        self.y = self.y.repeat(repeat)  # (N,) -> (N * repeat, )
 
     def __len__(self) -> int:
         """

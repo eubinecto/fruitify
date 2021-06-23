@@ -1,5 +1,5 @@
 
-from transformers.models.bert import BertForMaskedLM, BertTokenizer
+from transformers.models.bert import BertForMaskedLM, BertTokenizer, BertModel
 from fruitify.configs import BERT_MODEL
 
 # you can just embed the special tokens in sentences:

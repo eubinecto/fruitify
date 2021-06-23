@@ -62,6 +62,9 @@ class RD(pl.LightningModule):
         self.log('train_loss', loss.item())  # monitor this, while training.
         return loss
 
+    def on_epoch_end(self) -> None:
+        pass
+
     def configure_optimizers(self) -> Optimizer:
         """
         Instantiates and returns the optimizer to be used for this model

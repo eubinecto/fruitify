@@ -25,12 +25,16 @@ def main():
                         default=20)
     parser.add_argument("--batch_size", type=str,
                         default=40)
+    parser.add_argument("--repeat", type=int,
+                        default=20)
+
     args = parser.parse_args()
     fruit_type: str = args.fruit_type
     k: int = args.k
     lr: float = args.lr
     max_epochs: int = args.max_epochs
     batch_size: int = args.batch_size
+    repeat: int = args.repeat
 
     # --- instantiate the models --- #
     if fruit_type == "mono":
@@ -51,6 +55,7 @@ def main():
     # --- load the data --- #
     fruit2def = load_fruit2def()
     dataset = Fruit2DefDataset(fruit2def, tokenizer, k)  # just use everything for training
+    dataset.upsample(repeat)  # just populate the batch
     dataloader = DataLoader(dataset, batch_size=batch_size,
                             shuffle=True,  # this should be set to True maybe?
                             num_workers=4)
