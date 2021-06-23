@@ -33,6 +33,7 @@ def main():
         raise ValueError
 
     fruits = VOCAB
+    rd = rd.cuda()
     fruitifier = Fruitifier(rd, tokenizer, fruits)
     print("### desc: {} ###".format(desc))
     for results in fruitifier.fruitify(descriptions=[desc]):
