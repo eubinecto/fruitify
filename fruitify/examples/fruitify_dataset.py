@@ -1,8 +1,8 @@
-from fruitify.loaders import load_fruit2def
+from fruitify.loaders import load_fruitify_dataset
 
 
 def main():
-    fruit2def = load_fruit2def()
+    fruit2def = load_fruitify_dataset()
     for pair in fruit2def:
         print(pair)
     print("in total:", len(fruit2def))

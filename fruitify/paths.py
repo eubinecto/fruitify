@@ -11,7 +11,7 @@ SAVED_DIR = path.join(DATA_DIR, "saved")
 
 
 # the files.
-FRUIT2DEFS_TSV = path.join(DATA_DIR, "fruit2def.tsv")
+FRUITIFY_DATASET_TSV = path.join(DATA_DIR, "fruitify_dataset.tsv")
 
 
 # the models
