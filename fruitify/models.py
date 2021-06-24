@@ -88,12 +88,6 @@ class Fruitifier:
         self.fruits = fruits  # the classes
 
     def fruitify(self, descriptions: List[str], *args, **kwargs) -> List[List[Tuple[str, float]]]:
-        raise NotImplementedError
-
-
-class MonoENFruitifier(Fruitifier):
-
-    def fruitify(self, descriptions: List[str], **kwargs) -> List[List[Tuple[str, float]]]:
         # get the X
         fruit2def = [("", desc) for desc in descriptions]
         X = Fruit2DefDataset.build_X(fruit2def, tokenizer=self.tokenizer, k=self.rd.hparams['k'])\
@@ -112,8 +106,3 @@ class MonoENFruitifier(Fruitifier):
             results.append(sorted(fruit2score, key=lambda x: x[1], reverse=True))
         return results
 
-
-class CrossFruitifier(Fruitifier):
-
-    def fruitify(self, descriptions: List[str], kr2en: bool, **kwargs) -> List[List[Tuple[str, float]]]:
-        pass

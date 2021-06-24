@@ -15,6 +15,6 @@ FRUITIFY_DATASET_TSV = path.join(DATA_DIR, "fruitify_dataset.tsv")
 
 
 # the models
-MONO_CKPT = path.join(DATA_DIR, "lightning_logs/version_0/checkpoints/mono_epoch=11_train_loss=0.04.ckpt")
-
+MONO_EN_CKPT = path.join(DATA_DIR, "lightning_logs/version_0/checkpoints/mono_epoch=11_train_loss=0.04.ckpt")
+CROSS_CKPT = path.join(DATA_DIR, "lightning_logs/...")
 
