@@ -6,26 +6,58 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
-from fruitify.vocab import VOCAB
+from fruitify.vocab import LANGS
 
 
 class Fruit2DefDataset(Dataset):
+    def __init__(self,
+                 fruit2def: List[Tuple[str, str, str]],
+                 tokenizer: BertTokenizer,
+                 k: int):
+        self.X = self.build_X(fruit2def, tokenizer, k)
+        self.y = self.build_y(fruit2def, tokenizer, k)
+
+    @staticmethod
+    def build_X(fruit2def: List[Tuple[str, str, str]], tokenizer: BertTokenizer, k: int) -> Tensor:
+        raise NotImplementedError
+
+    @staticmethod
+    def build_y(fruit2def: List[Tuple[str, str, str]], classes: List[str]) -> Tensor:
+        raise NotImplementedError
+
+    def upsample(self, repeat: int):
+        """
+        this is to try upsampling the batch by simply repeating the instances.
+        https://github.com/eubinecto/fruitify/issues/7#issuecomment-860603350
+        :return:
+        """
+        self.X = self.X.repeat(repeat, 1, 1)  # (N, 3, L) -> (N * repeat, 3, L)
+        self.y = self.y.repeat(repeat)  # (N,) -> (N * repeat, )
+
+    def __len__(self) -> int:
+        """
+        Returning the size of the dataset
+        :return:
+        """
+        return self.y.shape[0]
+
+    def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor]:
+        """
+        Returns features & the label
+        :param idx:
+        :return:
+        """
+        return self.X[idx], self.y[idx]
+
+
+class MonoFruit2Def(Fruit2DefDataset):
     """
     This structure follows
     """
-    # should I change this into ... encodings & labels?
-    def __init__(self,
-                 fruit2def: List[Tuple[str, str]],
-                 tokenizer: BertTokenizer,
-                 k: int):
-        # (N, 3, L)
-        self.X = self.build_X([def_ for _, def_ in fruit2def], tokenizer, k)
-        # (N,)
-        fruits = [fruit for fruit, _ in fruit2def]
-        self.y = self.build_y(fruits, VOCAB)
 
     @staticmethod
-    def build_X(defs: List[str], tokenizer: BertTokenizer, k: int) -> Tensor:
+    def build_X(fruit2def: List[Tuple[str, str, str]], tokenizer: BertTokenizer, k: int) -> Tensor:
+        defs = [def_ for _, _, def_ in fruit2def]
         lefts = [" ".join(["[MASK]"] * k)] * len(defs)
         rights = defs
         encodings = tokenizer(text=lefts,

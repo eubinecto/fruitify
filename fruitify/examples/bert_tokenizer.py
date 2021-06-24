@@ -1,6 +1,6 @@
 from transformers import BertTokenizer, AddedToken
 from fruitify.configs import BERT_MODEL
-from fruitify.vocab import VOCAB
+from fruitify.vocab import VOCAB_CROSS
 
 # you can just use special tokens in the sentences:
 BATCH = [
@@ -39,12 +39,12 @@ def main():
     # the model will not attend to the padded tokens, thanks to the attention mask.
 
     print("---words---")
-    k = 5
+    k = 10
     mask_id = tokenizer.convert_tokens_to_ids("[MASK]")
     pad_id = tokenizer.convert_tokens_to_ids("[PAD]")
     print("mask_id/pad_id:", mask_id, pad_id)
 
-    encoded = tokenizer(text=VOCAB,
+    encoded = tokenizer(text=VOCAB_CROSS,
                         add_special_tokens=False,
                         padding='max_length',
                         max_length=k,  # set to k
