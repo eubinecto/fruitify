@@ -2,7 +2,7 @@
 load a pre-trained fruitify, and play with it.
 """
 import argparse
-
+import torch
 from transformers import BertTokenizer, BertForMaskedLM, BertConfig
 from fruitify.models import MonoLingRD, Fruitifier
 from fruitify.paths import MONO_CKPT
@@ -20,6 +20,8 @@ def main():
     fruit_type: str = args.fruit_type
     desc: str = args.desc
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     if fruit_type == "mono":
         config = BertConfig()
         bert_mlm = BertForMaskedLM(config)
@@ -27,13 +29,13 @@ def main():
         word2subs = build_word2subs(tokenizer, k=3)  # this is something I don't really like...
         rd = MonoLingRD.load_from_checkpoint(MONO_CKPT, bert_mlm=bert_mlm, word2subs=word2subs)
         rd.eval()  # this is necessary
+        rd = rd.to(device)
+
     elif fruit_type == "cross":
         raise NotImplementedError
     else:
         raise ValueError
-
     fruits = VOCAB
-    rd = rd.cuda()
     fruitifier = Fruitifier(rd, tokenizer, fruits)
     print("### desc: {} ###".format(desc))
     for results in fruitifier.fruitify(descriptions=[desc]):

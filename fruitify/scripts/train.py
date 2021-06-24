@@ -36,22 +36,26 @@ def main():
     batch_size: int = args.batch_size
     repeat: int = args.repeat
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # --- instantiate the models --- #
+
     if fruit_type == "mono":
         bert_mlm = BertForMaskedLM.from_pretrained(BERT_MODEL)
         tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
-        word2subs = build_word2subs(tokenizer, k)
+        word2subs = build_word2subs(tokenizer, k).to(device)
         rd = MonoLingRD(bert_mlm, word2subs, k, lr)
         model_name = "mono_{epoch:02d}_{train_loss:.2f}"
     elif fruit_type == "cross":
         # based off of pre-trained multilingual bert
         bert_ucl = UnalignedCrossLingRDBertModel.from_pretrained(MBERT_MODEL)
         tokenizer = BertTokenizer.from_pretrained(MBERT_MODEL)
-        word2subs = build_word2subs(tokenizer, k)
+        word2subs = build_word2subs(tokenizer, k).to(device)
         rd = UnalignedCrossLingRD(bert_ucl, word2subs, k, lr)
         model_name = "cross_{epoch:02d}_{train_loss:.2f}"
     else:
         raise ValueError
+    rd.to(device)
     # --- load the data --- #
     fruit2def = load_fruit2def()
     dataset = Fruit2DefDataset(fruit2def, tokenizer, k)  # just use everything for training

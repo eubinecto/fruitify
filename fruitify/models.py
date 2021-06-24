@@ -24,7 +24,7 @@ class RD(pl.LightningModule):
     def __init__(self, word2subs: Tensor, k: int, lr: float):
         super().__init__()
         # -- to be used to compute S_word -- #
-        self.word2subs = word2subs.cuda()
+        self.word2subs = word2subs
         # -- hyper params --- #
         # should be saved to self.hparams
         # https://github.com/PyTorchLightning/pytorch-lightning/issues/4390#issue-730493746
@@ -55,8 +55,9 @@ class RD(pl.LightningModule):
         :return: (1,); the loss for this batch
         """
         X, y = batch
-        X = X.cuda()
-        y = y.cuda()
+        # load the batches on the device.
+        X = X.to(self.device)
+        y = y.to(self.device)
         S_subword = self.forward(X)  # (N, 3, L) -> (N, K, |S|)
         S_word = self.S_word(S_subword)  # (N, K, |S|) -> (N, |V|)
         loss = F.cross_entropy(S_word, y)  # (N, |V|) -> (N,)
@@ -209,7 +210,8 @@ class Fruitifier:
 
     def fruitify(self, descriptions: List[str]) -> List[List[Tuple[str, float]]]:
         # get the X
-        X = Fruit2DefDataset.build_X(defs=descriptions, tokenizer=self.tokenizer, k=self.rd.hparams['k']).cuda()        
+        X = Fruit2DefDataset.build_X(defs=descriptions, tokenizer=self.tokenizer, k=self.rd.hparams['k'])\
+            .to(self.rd.device)
         # get S_subword for this.
         S_subword = self.rd.forward(X)
         S_word = self.rd.S_word(S_subword)  # (N, |V|).
