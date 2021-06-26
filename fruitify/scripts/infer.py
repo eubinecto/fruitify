@@ -6,7 +6,7 @@ import torch
 from transformers import BertTokenizer, BertForMaskedLM, BertConfig
 from fruitify.models import ReverseDict, Fruitifier
 from fruitify.paths import MONO_EN_CKPT, CROSS_CKPT
-from fruitify.configs import BERT_MODEL
+from fruitify.configs import BERT_MODEL, MBERT_MODEL
 from fruitify.vocab import build_word2subs, VOCAB_MONO_EN, VOCAB_CROSS
 
 
@@ -23,8 +23,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if rd_mode == "mono_en":
-        config = BertConfig()
-        bert_mlm = BertForMaskedLM(config)
+        bert_mlm = BertForMaskedLM.from_pretrained(BERT_MODEL)
         tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
         word2subs = build_word2subs(tokenizer, k=3, mode=rd_mode)  # this is something I don't really like...
         rd = ReverseDict.load_from_checkpoint(MONO_EN_CKPT, bert_mlm=bert_mlm, word2subs=word2subs)
@@ -32,11 +31,10 @@ def main():
         rd = rd.to(device)
         vocab = VOCAB_MONO_EN
     elif rd_mode == "cross":
-        config = BertConfig()
-        bert_mlm = BertForMaskedLM(config)
-        tokenizer = BertTokenizer.from_pretrained(BERT_MODEL)
+        mbert_mlm = BertForMaskedLM.from_pretrained(MBERT_MODEL)
+        tokenizer = BertTokenizer.from_pretrained(MBERT_MODEL)
         word2subs = build_word2subs(tokenizer, k=10, mode=rd_mode)  # this is something I don't really like...
-        rd = ReverseDict.load_from_checkpoint(CROSS_CKPT, bert_mlm=bert_mlm, word2subs=word2subs)
+        rd = ReverseDict.load_from_checkpoint(CROSS_CKPT, bert_mlm=mbert_mlm, word2subs=word2subs)
         rd.eval()  # this is necessary
         rd = rd.to(device)
         vocab = VOCAB_CROSS
