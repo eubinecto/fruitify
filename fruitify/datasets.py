@@ -6,26 +6,23 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
-from fruitify.vocab import VOCAB
+from fruitify.vocab import VOCAB_MONO_EN, VOCAB_CROSS
 
 
 class Fruit2DefDataset(Dataset):
-    """
-    This structure follows
-    """
-    # should I change this into ... encodings & labels?
     def __init__(self,
                  fruit2def: List[Tuple[str, str]],
                  tokenizer: BertTokenizer,
-                 k: int):
+                 k: int,
+                 classes: List[str]):
         # (N, 3, L)
-        self.X = self.build_X([def_ for _, def_ in fruit2def], tokenizer, k)
+        self.X = self.build_X(fruit2def, tokenizer, k)
         # (N,)
-        fruits = [fruit for fruit, _ in fruit2def]
-        self.y = self.build_y(fruits, VOCAB)
+        self.y = self.build_y(fruit2def, classes)
 
     @staticmethod
-    def build_X(defs: List[str], tokenizer: BertTokenizer, k: int) -> Tensor:
+    def build_X(fruit2def: List[Tuple[str, str]], tokenizer: BertTokenizer, k: int):
+        defs = [def_ for _, def_ in fruit2def]
         lefts = [" ".join(["[MASK]"] * k)] * len(defs)
         rights = defs
         encodings = tokenizer(text=lefts,
@@ -43,7 +40,8 @@ class Fruit2DefDataset(Dataset):
                             encodings['attention_mask']], dim=1)
 
     @staticmethod
-    def build_y(fruits: List[str], classes: List[str]) -> Tensor:
+    def build_y(fruit2def: List[Tuple[str, str]], classes: List[str]):
+        fruits = [fruit for fruit, _ in fruit2def]
         return Tensor([
             classes.index(fruit)
             for fruit in fruits
@@ -73,3 +71,48 @@ class Fruit2DefDataset(Dataset):
         """
         return self.X[idx], self.y[idx]
 
+
+class MonoENFruit2Def(Fruit2DefDataset):
+    """
+    eng-eng
+    """
+    def __init__(self, fruitify_dataset: List[List[str]], tokenizer: BertTokenizer, k: int):
+        classes = VOCAB_MONO_EN
+        fruit2def = self.to_fruit2def(fruitify_dataset)
+        super().__init__(fruit2def, tokenizer, k, classes)
+
+    @staticmethod
+    def to_fruit2def(fruitify_dataset) -> List[Tuple[str, str]]:
+        return [
+            (row[0].strip(), en_def.strip())
+            for row in fruitify_dataset
+            if row[2] == "en"
+            for en_def in row[3:]
+        ]
+
+
+class CrossFruit2Def(Fruit2DefDataset):
+    """
+    eng-kor
+    kor-en
+    """
+    def __init__(self, fruitify_dataset: List[List[str]], tokenizer: BertTokenizer, k: int):
+        classes = VOCAB_CROSS
+        fruit2def = self.to_fruit2def(fruitify_dataset)
+        super().__init__(fruit2def, tokenizer, k, classes)
+
+    @staticmethod
+    def to_fruit2def(fruitify_dataset) -> List[Tuple[str, str]]:
+        en2kor = [
+            (row[0].strip(), def_.strip())
+            for row in fruitify_dataset
+            for def_ in row[3:]
+            if row[2] == "kr"
+        ]  # just take all the definitions
+        kr2en = [
+            (row[1].strip(), def_.strip())
+            for row in fruitify_dataset
+            for def_ in row[3:]
+            if row[2] == "en"
+        ]  # just take all the definitions
+        return en2kor + kr2en

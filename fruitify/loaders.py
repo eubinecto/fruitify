@@ -1,17 +1,18 @@
 from typing import List, Tuple
-from fruitify.paths import FRUIT2DEFS_TSV
+from fruitify.paths import FRUITIFY_DATASET_TSV
 import csv
 
 
-def load_fruit2def() -> List[Tuple[str, str]]:
-    with open(FRUIT2DEFS_TSV, 'r') as fh:
-        csv_reader = csv.reader(fh, delimiter="\t")
+def load_fruitify_dataset() -> List[List[str]]:
+    """
+    (en, kr, lang, def)
+    :return:
+    """
+    with open(FRUITIFY_DATASET_TSV, 'r') as fh:
+        tsv_reader = csv.reader(fh, delimiter="\t")
         # skip the header
-        next(csv_reader)
-        fruit2def = list()
-        for row in csv_reader:
-            fruit2def += [
-                (row[0].strip(), definition.strip())
-                for definition in row[1:9]
-            ]
-        return fruit2def
+        next(tsv_reader)
+        return [
+            row
+            for row in tsv_reader
+        ]
